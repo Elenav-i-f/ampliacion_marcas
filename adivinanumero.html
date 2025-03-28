@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Adivinar el Número</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        #mensaje {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>¡Adivina el Número!</h1>
+    <p>He pensado en un número entre 1 y 100. ¡Intenta adivinarlo!</p>
+    <input type="number" id="inputNumero" placeholder="Introduce un número" min="1" max="100">
+    <button onclick="adivinarNumero() ">Probar
+    </button>
+    <img id="imagen1" src=""
+    
+    <div id="mensaje"></div>
+
+    <script>
+        const numeroSecreto = Math.floor(Math.random() * 100) + 1;
+        let intentos = 0;
+
+        function adivinarNumero() {
+            const input = document.getElementById('inputNumero');
+            const mensaje = document.getElementById('mensaje');
+            const numeroUsuario = parseInt(input.value);
+            const constParrafoNumeros=document.getElementById("miParrafoNumeros")
+            var ListaNumeros="";
+
+            if (isNaN(numeroUsuario) || numeroUsuario < 1 || numeroUsuario > 100) {
+                mensaje.textContent = "Por favor, introduce un número válido entre 1 y 100.";
+                return;
+            }
+
+            intentos++;
+
+            if (numeroUsuario === numeroSecreto) {
+                let resultadoFinal;
+
+                if (intentos <=4) {
+                    resultadoFinal = "¡Eres un dios! Lo adivinaste en " + intentos + " intento(s).";
+                } else if (intentos <= 7) {
+                    resultadoFinal = "¡Eres bueno! Lo adivinaste en " + intentos + " intento(s).";
+                } else if (intentos <= 15) {
+                    resultadoFinal = "Ni te dediques a adivinar, morirás de hambre. Te tomó " + intentos + " intento(s).";
+                } else {
+                    resultadoFinal = "Quizás deberías cambiar de juego. Usaste " + intentos + " intento(s).";
+                }
+
+                mensaje.textContent = resultadoFinal;
+                mensaje.style.color = "green";
+                return;
+            }
+
+            if (Math.abs(numeroUsuario - numeroSecreto) <= 5) {
+                mensaje.textContent = "¡Muy caliente! Estás muy cerca.";
+                mensaje.style.color = "red";
+            } else if (Math.abs(numeroUsuario - numeroSecreto) <= 15) {
+                mensaje.textContent = "Caliente, pero no tanto.";
+                mensaje.style.color = "orange";
+            } else if (Math.abs(numeroUsuario - numeroSecreto) <= 30) {
+                mensaje.textContent = "Frío. Estás algo lejos.";
+                mensaje.style.color = "blue";
+            } else {
+                mensaje.textContent = "Muy frío. Estás muy lejos.";
+                mensaje.style.color = "darkblue";
+            }
+        }
+    </script>
+</body>
+</html>
