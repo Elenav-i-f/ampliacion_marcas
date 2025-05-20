@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Escondite Ingles</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      padding: 25px;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: #e65100;
+      margin-bottom: 25px;
+      text-shadow: 0 0 3px #ffb74d;
+    }
+
+    #players {
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .player {
+      display: flex;
+      align-items: center;
+      margin-bottom: 18px;
+      background: #fff;
+      padding: 12px 15px;
+      border-radius: 10px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+    }
+
+    .name {
+      width: 130px;
+      font-weight: 700;
+      color: #ef6c00;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+    }
+
+    .heart {
+      font-size: 22px;
+      color: #e53935;
+    }
+
+    .cells {
+      display: flex;
+      flex-grow: 1;
+      gap: 6px;
+      justify-content: flex-start;
+    }
+
+    .cell {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1.5px solid #ddd;
+      background: #fafafa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 600;
+      font-size: 14px;
+      color: #666;
+      user-select: none;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .cell.active {
+      background-color: #ef6c00;
+      color: white;
+      font-weight: 800;
+      box-shadow: 0 0 8px #ef6c00aa;
+    }
+
+    button.action-btn {
+      margin-left: 10px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      user-select: none;
+    }
+
+    button.action-btn:disabled {
+      background-color: #ccc;
+      cursor: default;
+      color: #999;
+    }
+
+    button.andar {
+      background-color: #37474f;
+      color: white;
+    }
+
+    button.andar:hover:not(:disabled) {
+      background-color: #455a64;
+    }
+
+    button.pararse {
+      background-color: #607d8b;
+      color: white;
+    }
+
+    button.pararse:hover:not(:disabled) {
+      background-color: #78909c;
+    }
+
+    #sacadaBtn {
+      margin-top: 20px;
+      background-color: #ff9800;
+      border: none;
+      padding: 14px 30px;
+      border-radius: 12px;
+      font-weight: 900;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 0 12px #ff9800bb;
+      transition: background-color 0.3s ease;
+    }
+
+    #sacadaBtn:disabled {
+      background-color: #f3b177;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    #reiniciarBtn {
+      margin-top: 14px;
+      background-color: #7b1fa2;
+      border: none;
+      padding: 12px 26px;
+      border-radius: 10px;
+      font-weight: 700;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      user-select: none;
+      display: none;
+      box-shadow: 0 0 8px #7b1fa2bb;
+      transition: background-color 0.3s ease;
+    }
+
+    #reiniciarBtn:hover {
+      background-color: #9c27b0;
+      box-shadow: 0 0 14px #9c27b0cc;
+    }
+
+    #log {
+      background: white;
+      border: 1px solid #ddd;
+      padding: 14px 18px;
+      margin-top: 25px;
+      max-width: 700px;
+      width: 100%;
+      height: 190px;
+      overflow-y: auto;
+      font-size: 15px;
+      line-height: 1.35;
+      border-radius: 12px;
+      color: #444;
+      user-select: none;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+
+<h1>Carrera de Dados</h1>
+
+<div id="players"></div>
+
+<button id="sacadaBtn" disabled>🔥 SACADA de Bolsa</button>
+<button id="reiniciarBtn">🔄 Reiniciar Partida</button>
+
+<div id="log"></div>
+
+<script>
+  const totalCasillas = 10;
+  const players = [
+    { name: "Jugador 1", position: 1, action: null, heart: false },
+    { name: "Jugador 2", position: 1, action: null, heart: false },
+    { name: "Jugador 3", position: 1, action: null, heart: false }
+  ];
+  let bolsa = ["negro", "negro", "negro", "rojo"];
+  let dadosNegrosExtraidos = [];
+
+  function renderPlayers() {
+    const container = document.getElementById("players");
+    container.innerHTML = "";
+
+    players.forEach((p, i) => {
+      const playerDiv = document.createElement("div");
+      playerDiv.className = "player";
+
+      const nameSpan = document.createElement("div");
+      nameSpan.className = "name";
+      nameSpan.textContent = p.name;
+      if (p.heart) {
+        const heartSpan = document.createElement("span");
+        heartSpan.className = "heart";
+        heartSpan.textContent = "❤️";
+        nameSpan.appendChild(heartSpan);
+      }
+      playerDiv.appendChild(nameSpan);
+
+      const cellsDiv = document.createElement("div");
+      cellsDiv.className = "cells";
+
+      for(let pos=1; pos<=totalCasillas; pos++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        if(pos === p.position) cell.classList.add("active");
+        cell.textContent = pos;
+        cellsDiv.appendChild(cell);
+      }
+      playerDiv.appendChild(cellsDiv);
+
+      // Botones
+      const btnAndar = document.createElement("button");
+      btnAndar.className = "action-btn andar";
+      btnAndar.textContent = "Andar";
+      btnAndar.disabled = p.action !== null;
+      btnAndar.onclick = () => elegir(i, "andar");
+
+      const btnParar = document.createElement("button");
+      btnParar.className = "action-btn pararse";
+      btnParar.textContent = "Pararse";
+      btnParar.disabled = p.action !== null;
+      btnParar.onclick = () => elegir(i, "pararse");
+
+      playerDiv.appendChild(btnAndar);
+      playerDiv.appendChild(btnParar);
+
+      container.appendChild(playerDiv);
+    });
+
+    document.getElementById("sacadaBtn").disabled = players.some(p => p.action === null);
+  }
+
+  function elegir(index, decision) {
+    players[index].action = decision;
+    log(`${players[index].name} decide **${decision.toUpperCase()}**.`);
+    renderPlayers();
+  }
+
+  function tirarDado(tipo) {
+    return tipo === "negro" ? Math.floor(Math.random() * 6) + 1 : Math.floor(Math.random() * 3) + 1;
+  }
+
+  function sacada() {
+    const dado = bolsa.splice(Math.floor(Math.random() * bolsa.length), 1)[0];
+    log(`🎲 SACADA: salió dado ${dado.toUpperCase()}`);
+
+    if (dado === "negro") dadosNegrosExtraidos.push(tirarDado("negro"));
+    const negrosSum = dadosNegrosExtraidos.reduce((a, b) => a + b, 0);
+
+    players.forEach(p => {
+      if (p.action === "pararse") {
+        if (dado === "rojo" && !p.heart) {
+          p.heart = true;
+          log(`${p.name} parado y sale ROJO → gana un ❤️`);
+        }
+      } else if (p.action === "andar") {
+        if (dado === "negro") {
+          p.position += negrosSum;
+          if (p.position > totalCasillas) p.position = totalCasillas;
+          log(`${p.name} andando y sale NEGRO → avanza ${negrosSum} casillas`);
+        } else { // dado rojo
+          if (p.heart) {
+            p.heart = false;
+            log(`${p.name} andando y con ❤️ → pierde el ❤️ y no se mueve`);
+          } else {
+            const total = negrosSum + tirarDado("rojo");
+            p.position -= total;
+            if (p.position < 1) p.position = 1;
+            log(`${p.name} andando sin ❤️ → pierde ${total} casillas (rojo negativo)`);
+          }
+        }
+      }
+      p.action = null;
+    });
+
+    if (bolsa.length === 0) {
+      bolsa = ["negro", "negro", "negro", "rojo"];
+      dadosNegrosExtraidos = [];
+      log("🔁 La bolsa se ha repuesto con los 4 dados.");
+    }
+
+    renderPlayers();
+    checkGanador();
+  }
+
+  function checkGanador() {
+    const ganador = players.find(p => p.position >= totalCasillas);
+    if (ganador) {
+      log(`🎉 ¡${ganador.name} ha ganado la carrera!`);
+      document.getElementById("sacadaBtn").disabled = true;
+      document.getElementById("reiniciarBtn").style.display = "inline-block";
+    }
+  }
+
+  function log(msg) {
+    const logDiv = document.getElementById("log");
+    logDiv.innerHTML += msg + "<br>";
+    logDiv.scrollTop = logDiv.scrollHeight;
+  }
+
+  document.getElementById("sacadaBtn").addEventListener("click", sacada);
+
+  document.getElementById("reiniciarBtn").addEventListener("click", () => {
+    players.forEach(p => {
+      p.position = 1;
+      p.action = null;
+      p.heart = false;
+    });
+    bolsa = ["negro", "negro", "negro", "rojo"];
+    dadosNegrosExtraidos = [];
+    document.getElementById("sacadaBtn").disabled = true;
+    document.getElementById("reiniciarBtn").style.display = "none";
+    document.getElementById("log").innerHTML = "";
+    renderPlayers();
+  });
+
+  // Inicio
+  renderPlayers();
+</script>
+
+</body>
+</html>
