@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Escondite Ingles</title>
+  <meta charset="UTF-8">
+  <title>Carrera de Dados</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -137,7 +137,7 @@
     }
 
     #reiniciarBtn {
-      margin-top: 14px;
+      margin-top: 12px;
       background-color: #7b1fa2;
       border: none;
       padding: 12px 26px;
@@ -147,7 +147,6 @@
       font-size: 16px;
       cursor: pointer;
       user-select: none;
-      display: none;
       box-shadow: 0 0 8px #7b1fa2bb;
       transition: background-color 0.3s ease;
     }
@@ -181,78 +180,55 @@
 
 <div id="players"></div>
 
-<button id="sacadaBtn" disabled>🔥 SACADA de Bolsa</button>
-<button id="reiniciarBtn">🔄 Reiniciar Partida</button>
+<button id="sacadaBtn" onclick="sacada()" disabled>🔥 SACADA de Bolsa</button>
+<button id="reiniciarBtn" onclick="reiniciar()">🔄 Reiniciar partida</button>
 
 <div id="log"></div>
 
 <script>
-  const totalCasillas = 10;
-  const players = [
-    { name: "Jugador 1", position: 1, action: null, heart: false },
-    { name: "Jugador 2", position: 1, action: null, heart: false },
-    { name: "Jugador 3", position: 1, action: null, heart: false }
-  ];
-  let bolsa = ["negro", "negro", "negro", "rojo"];
-  let dadosNegrosExtraidos = [];
+  var totalCasillas = 10;
+  var jugadores;
+  var bolsa;
+  var dadosNegros;
 
-  function renderPlayers() {
-    const container = document.getElementById("players");
-    container.innerHTML = "";
-
-    players.forEach((p, i) => {
-      const playerDiv = document.createElement("div");
-      playerDiv.className = "player";
-
-      const nameSpan = document.createElement("div");
-      nameSpan.className = "name";
-      nameSpan.textContent = p.name;
-      if (p.heart) {
-        const heartSpan = document.createElement("span");
-        heartSpan.className = "heart";
-        heartSpan.textContent = "❤️";
-        nameSpan.appendChild(heartSpan);
-      }
-      playerDiv.appendChild(nameSpan);
-
-      const cellsDiv = document.createElement("div");
-      cellsDiv.className = "cells";
-
-      for(let pos=1; pos<=totalCasillas; pos++) {
-        const cell = document.createElement("div");
-        cell.className = "cell";
-        if(pos === p.position) cell.classList.add("active");
-        cell.textContent = pos;
-        cellsDiv.appendChild(cell);
-      }
-      playerDiv.appendChild(cellsDiv);
-
-      // Botones
-      const btnAndar = document.createElement("button");
-      btnAndar.className = "action-btn andar";
-      btnAndar.textContent = "Andar";
-      btnAndar.disabled = p.action !== null;
-      btnAndar.onclick = () => elegir(i, "andar");
-
-      const btnParar = document.createElement("button");
-      btnParar.className = "action-btn pararse";
-      btnParar.textContent = "Pararse";
-      btnParar.disabled = p.action !== null;
-      btnParar.onclick = () => elegir(i, "pararse");
-
-      playerDiv.appendChild(btnAndar);
-      playerDiv.appendChild(btnParar);
-
-      container.appendChild(playerDiv);
-    });
-
-    document.getElementById("sacadaBtn").disabled = players.some(p => p.action === null);
+  function inicializar() {
+    jugadores = [
+      { nombre: "Jugador 1", pos: 1, accion: null, corazon: false },
+      { nombre: "Jugador 2", pos: 1, accion: null, corazon: false },
+      { nombre: "Jugador 3", pos: 1, accion: null, corazon: false }
+    ];
+    bolsa = ["negro", "negro", "negro", "rojo"];
+    dadosNegros = [];
+    document.getElementById("log").innerHTML = "";
+    document.getElementById("sacadaBtn").disabled = true;
+    mostrarJugadores();
   }
 
-  function elegir(index, decision) {
-    players[index].action = decision;
-    log(`${players[index].name} decide **${decision.toUpperCase()}**.`);
-    renderPlayers();
+  function mostrarJugadores() {
+    var contenedor = document.getElementById("players");
+    contenedor.innerHTML = "";
+
+    jugadores.forEach(function(p, i) {
+      var html = '<div class="player">';
+      html += '<div class="name">' + p.nombre + (p.corazon ? ' <span class="heart">❤️</span>' : '') + '</div>';
+      html += '<div class="cells">';
+      for (var j = 1; j <= totalCasillas; j++) {
+        html += '<div class="cell' + (j === p.pos ? ' active' : '') + '"></div>';
+      }
+      html += '</div>';
+      html += '<button class="action-btn andar" onclick="elegir(' + i + ', \'andar\')" ' + (p.accion ? 'disabled' : '') + '>Andar</button>';
+      html += '<button class="action-btn pararse" onclick="elegir(' + i + ', \'pararse\')" ' + (p.accion ? 'disabled' : '') + '>Pararse</button>';
+      html += '</div>';
+      contenedor.innerHTML += html;
+    });
+
+    document.getElementById("sacadaBtn").disabled = jugadores.some(j => j.accion === null);
+  }
+
+  function elegir(indice, accion) {
+    jugadores[indice].accion = accion;
+    log(jugadores[indice].nombre + " elige **" + accion.toUpperCase() + "**");
+    mostrarJugadores();
   }
 
   function tirarDado(tipo) {
@@ -260,81 +236,69 @@
   }
 
   function sacada() {
-    const dado = bolsa.splice(Math.floor(Math.random() * bolsa.length), 1)[0];
-    log(`🎲 SACADA: salió dado ${dado.toUpperCase()}`);
+    var index = Math.floor(Math.random() * bolsa.length);
+    var dado = bolsa.splice(index, 1)[0];
+    log("🎲 SACADA: salió " + dado.toUpperCase());
 
-    if (dado === "negro") dadosNegrosExtraidos.push(tirarDado("negro"));
-    const negrosSum = dadosNegrosExtraidos.reduce((a, b) => a + b, 0);
+    if (dado === "negro") dadosNegros.push(tirarDado("negro"));
+    var sumaNegros = dadosNegros.reduce(function(a,b){ return a + b; }, 0);
 
-    players.forEach(p => {
-      if (p.action === "pararse") {
-        if (dado === "rojo" && !p.heart) {
-          p.heart = true;
-          log(`${p.name} parado y sale ROJO → gana un ❤️`);
+    jugadores.forEach(function(p) {
+      if (p.accion === "pararse") {
+        if (dado === "rojo" && !p.corazon) {
+          p.corazon = true;
+          log(p.nombre + " estaba parado y sale ROJO → gana un ❤️");
         }
-      } else if (p.action === "andar") {
+      } else if (p.accion === "andar") {
         if (dado === "negro") {
-          p.position += negrosSum;
-          if (p.position > totalCasillas) p.position = totalCasillas;
-          log(`${p.name} andando y sale NEGRO → avanza ${negrosSum} casillas`);
-        } else { // dado rojo
-          if (p.heart) {
-            p.heart = false;
-            log(`${p.name} andando y con ❤️ → pierde el ❤️ y no se mueve`);
+          p.pos += sumaNegros;
+          if (p.pos > totalCasillas) p.pos = totalCasillas;
+          log(p.nombre + " andando y sale NEGRO → avanza " + sumaNegros + " casillas");
+        } else {
+          if (p.corazon) {
+            p.corazon = false;
+            log(p.nombre + " con ❤️ → pierde el ❤️ y no se mueve");
           } else {
-            const total = negrosSum + tirarDado("rojo");
-            p.position -= total;
-            if (p.position < 1) p.position = 1;
-            log(`${p.name} andando sin ❤️ → pierde ${total} casillas (rojo negativo)`);
+            var retrocede = sumaNegros + tirarDado("rojo");
+            p.pos -= retrocede;
+            if (p.pos < 1) p.pos = 1;
+            log(p.nombre + " sin ❤️ → retrocede " + retrocede + " casillas");
           }
         }
       }
-      p.action = null;
+      p.accion = null;
     });
 
     if (bolsa.length === 0) {
       bolsa = ["negro", "negro", "negro", "rojo"];
-      dadosNegrosExtraidos = [];
-      log("🔁 La bolsa se ha repuesto con los 4 dados.");
+      dadosNegros = [];
+      log("🔁 La bolsa se ha repuesto.");
     }
 
-    renderPlayers();
-    checkGanador();
+    mostrarJugadores();
+    verificarGanador();
   }
 
-  function checkGanador() {
-    const ganador = players.find(p => p.position >= totalCasillas);
+  function verificarGanador() {
+    var ganador = jugadores.find(function(p) { return p.pos >= totalCasillas; });
     if (ganador) {
-      log(`🎉 ¡${ganador.name} ha ganado la carrera!`);
+      log("🎉 ¡" + ganador.nombre + " ha ganado!");
       document.getElementById("sacadaBtn").disabled = true;
-      document.getElementById("reiniciarBtn").style.display = "inline-block";
     }
   }
 
-  function log(msg) {
-    const logDiv = document.getElementById("log");
-    logDiv.innerHTML += msg + "<br>";
-    logDiv.scrollTop = logDiv.scrollHeight;
+  function log(texto) {
+    var zona = document.getElementById("log");
+    zona.innerHTML += texto + "<br>";
+    zona.scrollTop = zona.scrollHeight;
   }
 
-  document.getElementById("sacadaBtn").addEventListener("click", sacada);
+  function reiniciar() {
+    inicializar();
+  }
 
-  document.getElementById("reiniciarBtn").addEventListener("click", () => {
-    players.forEach(p => {
-      p.position = 1;
-      p.action = null;
-      p.heart = false;
-    });
-    bolsa = ["negro", "negro", "negro", "rojo"];
-    dadosNegrosExtraidos = [];
-    document.getElementById("sacadaBtn").disabled = true;
-    document.getElementById("reiniciarBtn").style.display = "none";
-    document.getElementById("log").innerHTML = "";
-    renderPlayers();
-  });
-
-  // Inicio
-  renderPlayers();
+  // Arranca juego
+  inicializar();
 </script>
 
 </body>
